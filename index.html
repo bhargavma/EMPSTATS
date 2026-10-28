@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employees Data Tracker | Workforce Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{--navy:#12263f;--blue:#315f91;--sky:#eaf2fb;--bg:#f4f7fb;--card:#fff;--ink:#202c3c;--muted:#718096;--line:#e4eaf1;--green:#21845b;--amber:#b7791f;--red:#c14444;--shadow:0 8px 24px rgba(28,49,77,.055)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.shell{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}.sidebar{background:var(--navy);color:#fff;padding:22px 15px;display:flex;flex-direction:column;gap:25px}.brand{display:flex;align-items:center;gap:11px;padding:2px 7px}.brandmark{width:40px;height:40px;background:#fff;color:var(--navy);border-radius:12px;display:grid;place-items:center;font-weight:900;font-size:18px}.brand h1{font-size:15px;margin:0;line-height:1.25}.brand small{display:block;color:#b8c8dc;font-size:11px;margin-top:4px}.navtitle{color:#8fa6c1;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:0 11px;margin-bottom:-15px}.navbtn{width:100%;border:0;background:transparent;color:#d7e1ed;padding:12px 13px;border-radius:9px;text-align:left;display:flex;align-items:center;gap:12px;font-weight:600}.navbtn.active,.navbtn:hover{background:#284260;color:#fff}.navico{width:19px;text-align:center;font-size:17px}.sidebar-bottom{margin-top:auto;border:1px solid #3b5069;border-radius:12px;padding:13px;color:#c6d3e2;font-size:11px}.sidebar-bottom strong{display:block;color:white;font-size:12px;margin-bottom:5px}
+main{min-width:0}.topbar{height:75px;background:#fff;border-bottom:1px solid var(--line);padding:0 30px;display:flex;align-items:center;justify-content:space-between;gap:15px}.topbar-title{font-weight:750;font-size:16px}.topbar-sub{font-size:11px;color:var(--muted);margin-top:3px}.admin-chip{display:flex;align-items:center;gap:10px;font-weight:650}.admin-avatar{height:34px;width:34px;display:grid;place-items:center;background:#e7eef7;border-radius:50%;color:var(--blue);font-weight:800}
+.content{max-width:1650px;padding:25px 30px 34px;margin:auto}.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:19px}.eyebrow{font-size:10px;color:var(--blue);letter-spacing:1.3px;font-weight:850;text-transform:uppercase}.pagehead h2{margin:4px 0 4px;font-size:25px;letter-spacing:-.6px}.pagehead p{margin:0;color:var(--muted);font-size:12px}.actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid #d4dde7;background:#fff;color:#344054;border-radius:9px;padding:10px 14px;font-size:12px;font-weight:750}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.dark{background:var(--navy);border-color:var(--navy);color:#fff}.btn:hover{filter:brightness(.97)}.hidden{display:none!important}
+.importbox{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-bottom:18px}.importcard{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px 18px;box-shadow:var(--shadow)}.import-title{font-weight:800;font-size:13px;display:flex;gap:9px;align-items:center}.import-desc{font-size:11px;color:var(--muted);margin:6px 0 13px}.uploadrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.filelabel{display:inline-flex;align-items:center;gap:8px;border:1px dashed #9fb3ca;background:#f8fbff;padding:10px 12px;border-radius:9px;color:var(--blue);font-weight:750;font-size:12px;cursor:pointer}.filelabel input{display:none}.statusline{font-size:11px;color:var(--green);margin-top:9px}.tiny{font-size:10px;color:var(--muted)}.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.formgrid input,.formgrid select,.formgrid textarea{width:100%;min-width:0;border:1px solid #dbe3ec;border-radius:8px;padding:9px 10px;background:#fff;color:var(--ink);font-size:11px}.formgrid .wide{grid-column:span 2}.formgrid .full{grid-column:1/-1}.manual-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.manual-hint{font-size:10px;color:var(--muted);margin-top:7px}
+.filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 17px}.select,.search{border:1px solid #d6e0ea;background:#fff;border-radius:9px;padding:10px 12px;color:#344054;font-size:12px;min-width:190px}.search{flex:1;min-width:180px}.filter-label{font-size:11px;color:var(--muted);font-weight:750}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.metric{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:17px;box-shadow:var(--shadow);min-width:0}.metric-head{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:11px;font-weight:700}.metric-icon{width:34px;height:34px;display:grid;place-items:center;background:var(--sky);color:var(--blue);border-radius:10px;font-size:16px}.metric-value{font-size:26px;font-weight:850;letter-spacing:-.8px;margin:12px 0 3px;overflow-wrap:anywhere}.metric-foot{font-size:10px;color:var(--muted)}
+.chartgrid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:14px;margin-bottom:15px}.panel{background:#fff;border:1px solid var(--line);border-radius:13px;padding:17px;box-shadow:var(--shadow);min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}.panel-title{font-weight:800;font-size:13px}.panel-sub{color:var(--muted);font-size:10px;margin-top:4px}.chartbox{height:235px;position:relative}.wide{grid-column:span 2}.tablepanel{padding:0;overflow:hidden}.tablehead{padding:17px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}.tablewrap{overflow:auto;max-width:100%}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{padding:12px 15px;text-align:left;border-top:1px solid #edf1f5;font-size:11px}th{background:#f8fafc;color:#66758a;font-size:10px;text-transform:uppercase;letter-spacing:.45px;position:sticky;top:0}tbody tr:hover{background:#f7faff}.personcell{display:flex;align-items:center;gap:9px}.person-avatar{height:29px;width:29px;border-radius:50%;background:#e8eef6;color:#2d5f91;display:grid;place-items:center;font-weight:800}.rating{display:inline-flex;align-items:center;justify-content:center;min-width:27px;border-radius:8px;padding:5px 8px;font-weight:850;font-size:11px}.r1{background:#e2f4e8;color:#187443}.r2{background:#e9f4ed;color:#2a7650}.r3{background:#fff3d6;color:#966515}.r4{background:#ffeadc;color:#ad571d}.r5{background:#fde6e6;color:#b52d2d}.tag{border-radius:20px;padding:4px 8px;background:#edf2f7;color:#475569;font-size:10px}.detailgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.profilebanner{background:linear-gradient(120deg,#183153,#315f91);color:white;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;margin-bottom:16px}.profileinitial{height:58px;width:58px;border-radius:16px;background:#ffffff25;border:1px solid #ffffff45;display:grid;place-items:center;font-size:23px;font-weight:850}.profilebanner h3{margin:0;font-size:19px}.profilebanner p{margin:4px 0 0;color:#d9e5f2;font-size:11px}.profilemeta{margin-left:auto;text-align:right}.profilemeta small{display:block;color:#c8d7e8;font-size:10px}.profilemeta strong{display:block;font-size:24px;margin-top:2px}.allfields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.fieldtile{border:1px solid var(--line);border-radius:9px;padding:11px;min-width:0}.fieldtile small{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}.fieldtile strong{font-size:12px;overflow-wrap:anywhere}.empty{padding:25px;text-align:center;color:var(--muted)}.footer{text-align:center;color:#9aa7b7;font-size:10px;padding:24px 0 5px}.toast{position:fixed;bottom:20px;right:20px;max-width:340px;background:#183153;color:white;padding:13px 16px;border-radius:10px;box-shadow:var(--shadow);font-size:12px;z-index:10}
+@media(max-width:1200px){.chartgrid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.importbox{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.shell{grid-template-columns:1fr}.sidebar{padding:12px;gap:10px}.brand{padding:0 5px}.navtitle,.sidebar-bottom{display:none}.navrow{display:flex;gap:5px;overflow:auto}.navbtn{width:auto;white-space:nowrap;padding:9px 11px}.topbar{height:62px;padding:0 15px}.topbar-sub,.admin-chip span{display:none}.content{padding:17px 13px}.pagehead{align-items:flex-start;flex-direction:column}.pagehead h2{font-size:22px}.importbox{grid-template-columns:1fr}.metrics{gap:9px}.metric{padding:13px}.metric-value{font-size:22px}.chartgrid,.detailgrid{grid-template-columns:1fr}.wide{grid-column:auto}.chartbox{height:215px}.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.allfields{grid-template-columns:repeat(2,minmax(0,1fr))}.profilebanner{align-items:flex-start;flex-wrap:wrap}.profilemeta{margin-left:0;text-align:left;width:100%}.select{min-width:0;flex:1}.tablehead{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand"><div class="brandmark">ET</div><div><h1>Employees Data Tracker</h1><small>Workforce intelligence</small></div></div>
+  <div class="navtitle">ANALYTICS</div>
+  <div class="navrow">
+    <button class="navbtn active" id="navTeam" onclick="showTeam()"><span class="navico">▦</span> Team dashboard</button>
+    <button class="navbtn" id="navPerson" onclick="showSelected()"><span class="navico">♙</span> Employee dashboard</button>
+  </div>
+  <div class="sidebar-bottom"><strong>Admin workspace</strong>Import an Excel file or add records manually. Charts and ratings update from the current data.</div>
+</aside>
+<main>
+  <header class="topbar"><div><div class="topbar-title">Workforce analytics</div><div class="topbar-sub">Team overview · Individual employee insights</div></div><div class="admin-chip"><div class="admin-avatar">A</div><span>Administrator</span></div></header>
+  <div class="content">
+    <div class="pagehead"><div><div class="eyebrow">Employee performance intelligence</div><h2 id="pageTitle">Team dashboard</h2><p id="pageSubtitle">A complete view of team performance, quality, productivity and ratings.</p></div><div class="actions"><button class="btn" onclick="downloadCSV()">↓ Export CSV</button><button class="btn primary" onclick="document.getElementById('excelFile').click()">↑ Upload Excel</button></div></div>
+
+    <div class="importbox">
+      <section class="importcard">
+        <div class="import-title"><span>📂</span> Import Excel or CSV</div>
+        <div class="import-desc">Choose an .xlsx, .xls or .csv file. The first worksheet is read and the charts refresh automatically.</div>
+        <div class="uploadrow"><label class="filelabel">＋ Choose file<input type="file" id="excelFile" accept=".xlsx,.xls,.csv"></label><button class="btn" onclick="loadSample()">Restore example data</button></div>
+        <div class="statusline" id="fileStatus">Example data loaded · 21 employee records</div>
+        <div class="tiny" style="margin-top:6px">For best results, keep one employee per row and a header row with column names.</div>
+      </section>
+      <section class="importcard">
+        <div class="import-title"><span>✎</span> Add employee manually</div>
+        <div class="import-desc">Enter a name and the available performance metrics. Add the record to the live dashboard.</div>
+        <div class="formgrid" id="manualForm"></div>
+        <div class="manual-actions"><button class="btn primary" onclick="addManual()">＋ Add employee</button><button class="btn" onclick="clearManual()">Clear</button></div>
+        <div class="manual-hint">Fields are mapped to the current workbook's columns when possible.</div>
+      </section>
+    </div>
+
+    <div class="filters">
+      <span class="filter-label">View</span>
+      <select class="select" id="employeeSelect" onchange="onEmployeeSelect()"><option value="__all">All employees — team view</option></select>
+      <select class="select" id="departmentSelect" onchange="renderTeam()"><option value="__all">All teams / departments</option></select>
+      <input class="search" id="searchBox" placeholder="Search employee or any field…" oninput="renderTeam()">
+      <button class="btn" onclick="resetFilters()">Reset filters</button>
+    </div>
+
+    <section id="teamView">
+      <div class="metrics" id="teamMetrics"></div>
+      <div class="chartgrid">
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Rating distribution</div><div class="panel-sub">Employees by final rating · 1 is best, 5 is weakest</div></div></div><div class="chartbox"><canvas id="ratingPie"></canvas></div></div>
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Team composition</div><div class="panel-sub">Employee count by department or team</div></div></div><div class="chartbox"><canvas id="deptPie"></canvas></div></div>
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Rating overview</div><div class="panel-sub">Number of employees at each rating</div></div></div><div class="chartbox"><canvas id="ratingBars"></canvas></div></div>
+        <div class="panel wide"><div class="panel-head"><div><div class="panel-title">Employee score comparison</div><div class="panel-sub">Composite scores calculated from selected performance metrics</div></div></div><div class="chartbox" style="height:275px"><canvas id="scoreBars"></canvas></div></div>
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Average metric profile</div><div class="panel-sub">Team averages for numeric measures</div></div></div><div class="chartbox"><canvas id="metricBars"></canvas></div></div>
+      </div>
+      <div class="panel tablepanel"><div class="tablehead"><div><div class="panel-title">Team employee directory</div><div class="panel-sub" id="tableSummary">All employees and their ratings</div></div><span class="tiny">Select a name from the dropdown to view their personal dashboard</span></div><div class="tablewrap"><table><thead id="teamHead"></thead><tbody id="teamBody"></tbody></table></div></div>
+    </section>
+
+    <section id="personView" class="hidden">
+      <div id="profileBanner" class="profilebanner"></div>
+      <div class="metrics" id="personMetrics"></div>
+      <div class="detailgrid">
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Individual metric breakdown</div><div class="panel-sub">Available numeric fields for the selected employee</div></div></div><div class="chartbox"><canvas id="personMetricsChart"></canvas></div></div>
+        <div class="panel"><div class="panel-head"><div><div class="panel-title">Employee rating profile</div><div class="panel-sub">Composite score and rating level</div></div></div><div class="chartbox"><canvas id="personScoreChart"></canvas></div></div>
+      </div>
+      <div class="panel" style="margin-top:14px"><div class="panel-head"><div><div class="panel-title">Complete employee data</div><div class="panel-sub">Every column from the uploaded workbook for this employee</div></div></div><div class="allfields" id="personFields"></div></div>
+    </section>
+    <div class="footer">Employees Data Tracker · Free public demo · Upload your workbook to begin.</div>
+  </div>
+</main>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script>
+const INITIAL_DATA = [];
+const INITIAL_HEADERS = ["Row Labels", "Attandance", "Unplanned", "Calls", "RONA", "Sum of \n# of Cases ", "CCM", "O/s Cases", "GCN QC", "COE Log", "Total Errors", "Escalations", "Sample Accuracy % \non Production", "CCM %", "Production #", "Avg %", "Additional Comments", "Final Score", "Unnamed: 18", "Unnamed: 19", "Unnamed: 20", "Score card", "FT", "Composite Score (0-100)", "Performance Rank", "Final Rating (1=Good, 5=Bad)"];
+let records=INITIAL_DATA.map(r=>({...r})), headers=[...INITIAL_HEADERS], charts={}, currentMode='team', employeeNameKey='', ratingKey='Final Rating (1=Good, 5=Bad)', scoreKey='Composite Score (0-100)', rankKey='Performance Rank';
+const palette=['#315f91','#5c8fbd','#87afd1','#b2cbe2','#2b8b72','#d9a441','#8d7bc1','#d57a75','#6b7c93'];
+const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function norm(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,'')}
+function findKey(patterns, fallback=''){return headers.find(h=>patterns.some(p=>norm(h).includes(norm(p))))||fallback}
+function nameKey(){return headers.find(h=>['rowlabels','employeename','employee','name','fullname','staffname'].includes(norm(h)))||headers.find(h=>/employee.*name|staff.*name|full.*name/i.test(h))||headers[0]}
+function departmentKey(){return headers.find(h=>/department|team|division|unit/i.test(h))}
+function casesKey(){return headers.find(h=>/sum.*cases|number.*cases/i.test(h))}
+function num(v){if(v===null||v===undefined||v==='')return NaN;let n=Number(String(v).replace(/[%,$₹,\s]/g,''));return Number.isFinite(n)?n:NaN}
+function isNumericKey(k){return records.some(r=>Number.isFinite(num(r[k])))}
+function numericKeys(rows=records){return headers.filter(h=>rows.some(r=>Number.isFinite(num(r[h]))))}
+function average(rows,k){const a=rows.map(r=>num(r[k])).filter(Number.isFinite);return a.length?a.reduce((s,v)=>s+v,0)/a.length:NaN}
+function fmt(v,k=''){if(v===null||v===undefined||v==='')return '—';let n=num(v);if(Number.isFinite(n)&&typeof v!=='boolean'){if(/%|percent|accuracy|attendance|attandance|avg/i.test(k)&&n>0&&n<=1.5)return (n*100).toFixed(1)+'%';return n.toLocaleString(undefined,{maximumFractionDigits:2})+( /%|percent|accuracy|attendance|attandance|avg/i.test(k)&&String(v).includes('%')?'%':'')}return String(v)}
+function ratingOf(r){let k=headers.find(h=>/finalrating|rating/i.test(norm(h)));let n=num(r[k]);return Number.isFinite(n)?n:NaN}
+function scoreOf(r){let k=headers.find(h=>/compositescore|score.*100/i.test(norm(h)));let n=num(r[k]);return Number.isFinite(n)?n:NaN}
+function rankOf(r){let k=headers.find(h=>/performancerank|rank/i.test(norm(h)));return num(r[k])}
+function ratingClass(n){return 'r'+Math.max(1,Math.min(5,Math.round(n||3)))}
+function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),3200)}
+function chart(id,type,labels,values,opts={}){if(charts[id])charts[id].destroy();let datasets=opts.datasets||[{label:opts.label||'',data:values,backgroundColor:opts.backgroundColor||palette,borderColor:'#fff',borderWidth:2,borderRadius:type==='bar'?5:0}];charts[id]=new Chart($(id),{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:['pie','doughnut'].includes(type),position:'bottom',labels:{boxWidth:9,padding:12,font:{size:10}}}},scales:['bar','line'].includes(type)?{y:{beginAtZero:true,grid:{color:'#edf1f5'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,minRotation:0}}}:{},...opts.options}})}
+function getTeamRows(){let d=$('departmentSelect').value,q=$('searchBox').value.toLowerCase().trim(),dk=departmentKey();return records.filter(r=>(!dk||d==='__all'||String(r[dk])===d)&&(!q||headers.some(h=>String(r[h]??'').toLowerCase().includes(q))))}
+function uniqueVals(rows,k){return [...new Set(rows.map(r=>String(r[k]??'').trim()).filter(Boolean))]}
+function groupCounts(rows,k){const out={};rows.forEach(r=>{let v=String(r[k]??'').trim()||'Not specified';out[v]=(out[v]||0)+1});return out}
+function metric(label,value,foot,ico){return `<div class="metric"><div class="metric-head"><span>${esc(label)}</span><span class="metric-icon">${ico}</span></div><div class="metric-value">${esc(value)}</div><div class="metric-foot">${esc(foot)}</div></div>`}
+function fillSelectors(){employeeNameKey=nameKey();let selected=$('employeeSelect').value,dept=$('departmentSelect').value;let names=uniqueVals(records,employeeNameKey).sort((a,b)=>a.localeCompare(b));$('employeeSelect').innerHTML='<option value="__all">All employees — team view</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');if(names.includes(selected))$('employeeSelect').value=selected;let dk=departmentKey(),depts=dk?uniqueVals(records,dk).sort():[];$('departmentSelect').innerHTML='<option value="__all">All teams / departments</option>'+depts.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('');if(depts.includes(dept))$('departmentSelect').value=dept}
+function renderTeam(){currentMode='team';$('teamView').classList.remove('hidden');$('personView').classList.add('hidden');$('navTeam').classList.add('active');$('navPerson').classList.remove('active');$('pageTitle').textContent='Team dashboard';$('pageSubtitle').textContent='A complete view of team performance, quality, productivity and ratings.';let rows=getTeamRows(),nk=nameKey(),dk=departmentKey(),rk=headers.find(h=>/finalrating|rating/i.test(norm(h))),sk=headers.find(h=>/compositescore|score.*100/i.test(norm(h))),nums=numericKeys(rows).filter(k=>k!==rk&&k!==sk&&!/rank|id/i.test(k));let rated=rows.map(r=>ratingOf(r)).filter(Number.isFinite);let avgScore=average(rows,sk||'');let ratingCounts={1:0,2:0,3:0,4:0,5:0};rows.forEach(r=>{let v=ratingOf(r);if(Number.isFinite(v)&&v>=1&&v<=5)ratingCounts[Math.round(v)]++});
+$('teamMetrics').innerHTML=[metric('Total employees',uniqueVals(rows,nk).length,'Unique employee names','♙'),metric('Average score',Number.isFinite(avgScore)?avgScore.toFixed(1):'—','Composite score out of 100','↗'),metric('Average rating',rated.length?(rated.reduce((a,b)=>a+b,0)/rated.length).toFixed(2):'—','Lower rating is better','★'),metric('Departments / teams',dk?uniqueVals(rows,dk).length:'—','Detected from workbook','▦')].join('');
+chart('ratingPie','doughnut',['Rating 1','Rating 2','Rating 3','Rating 4','Rating 5'],[1,2,3,4,5].map(x=>ratingCounts[x]));
+let groups=dk?groupCounts(rows,dk):{'All employees':rows.length};chart('deptPie','pie',Object.keys(groups),Object.values(groups));
+chart('ratingBars','bar',['1','2','3','4','5'],[1,2,3,4,5].map(x=>ratingCounts[x]),{options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}},x:{grid:{display:false}}}}});
+let sorted=rows.slice().sort((a,b)=>(scoreOf(b)||0)-(scoreOf(a)||0)).slice(0,15);chart('scoreBars','bar',sorted.map(r=>String(r[nk]??'').slice(0,20)),sorted.map(r=>scoreOf(r)),{options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#edf1f5'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+let metricKeys=nums.filter(k=>!/(rating|rank|score|id|cases|production|error|unplanned)/i.test(k)).slice(0,6);if(!metricKeys.length)metricKeys=nums.slice(0,6);chart('metricBars','bar',metricKeys.map(k=>k.replace(/\n/g,' ').slice(0,18)),metricKeys.map(k=>average(rows,k)),{options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'#edf1f5'}}}}});
+renderTeamTable(rows);$('tableSummary').textContent=`Showing ${rows.length} record(s) after filters`}
+function renderTeamTable(rows){let cols=[nameKey(),...headers.filter(h=>h!==nameKey()&&(/finalrating|compositescore|performancerank|department|team|avg|accuracy|production|attendance|attandance|sum.*cases|totalerrors/i.test(norm(h))))];cols=[...new Set(cols)].filter(h=>headers.includes(h));if(!cols.length)cols=headers.slice(0,7);$('teamHead').innerHTML='<tr>'+cols.map(h=>`<th>${esc(h.replace(/\n/g,' '))}</th>`).join('')+'</tr>';let rk=headers.find(h=>/finalrating|rating/i.test(norm(h)));$('teamBody').innerHTML=rows.length?rows.map(r=>'<tr>'+cols.map(h=>{let v=r[h]??'—';if(h===nameKey())return `<td><div class="personcell"><div class="person-avatar">${esc(String(v).trim().slice(0,1).toUpperCase())}</div><strong>${esc(v)}</strong></div></td>`;if(h===rk&&Number.isFinite(num(v)))return `<td><span class="rating ${ratingClass(num(v))}">${esc(v)}</span></td>`;return `<td>${esc(fmt(v,h))}</td>`}).join('')+'</tr>').join(''):'<tr><td colspan="'+cols.length+'" class="empty">No employees match these filters.</td></tr>'}
+function showTeam(){ $('employeeSelect').value='__all';renderTeam() }
+function showSelected(){let name=$('employeeSelect').value;if(name==='__all'){let first=uniqueVals(records,nameKey())[0];if(!first){toast('No employee records yet.');return}$('employeeSelect').value=first;name=first}renderPerson(name)}
+function onEmployeeSelect(){let v=$('employeeSelect').value;if(v==='__all')showTeam();else renderPerson(v)}
+function renderPerson(name){let r=records.find(x=>String(x[nameKey()])===name);if(!r){showTeam();return}currentMode='person';$('teamView').classList.add('hidden');$('personView').classList.remove('hidden');$('navTeam').classList.remove('active');$('navPerson').classList.add('active');$('pageTitle').textContent='Employee dashboard';$('pageSubtitle').textContent='Personal performance profile and complete record.';let rating=ratingOf(r),score=scoreOf(r),rank=rankOf(r),dk=departmentKey(),nums=numericKeys([r]).filter(k=>!/(rating|rank|score|id)/i.test(k));$('profileBanner').innerHTML=`<div class="profileinitial">${esc(name.trim().slice(0,1).toUpperCase())}</div><div><h3>${esc(name)}</h3><p>${esc(dk?(r[dk]||'Department not specified'):'Individual employee profile')}</p></div><div class="profilemeta"><small>Final rating · 1 best / 5 weakest</small><strong>${Number.isFinite(rating)?`Rating ${rating}`:'Not calculated'}</strong></div>`;
+$('personMetrics').innerHTML=[metric('Composite score',Number.isFinite(score)?score.toFixed(2):'—','Out of 100','↗'),metric('Performance rank',Number.isFinite(rank)?'#'+rank:'—','Within the team','⇧'),metric('Final rating',Number.isFinite(rating)?rating+'/5':'—','1 is best, 5 is weakest','★'),metric('Recorded fields',headers.filter(h=>r[h]!==undefined&&r[h]!==null&&r[h]!=='').length,'Non-empty data fields','▤')].join('');
+chart('personMetricsChart','bar',nums.slice(0,12).map(k=>k.replace(/\n/g,' ').slice(0,18)),nums.slice(0,12).map(k=>num(r[k])),{options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:55,minRotation:20}},y:{beginAtZero:true,grid:{color:'#edf1f5'}}}}});
+chart('personScoreChart','bar',['Composite score','Rating'],[Number.isFinite(score)?score:0,Number.isFinite(rating)?rating:0],{options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,suggestedMax:100,grid:{color:'#edf1f5'}},x:{grid:{display:false}}}}});
+$('personFields').innerHTML=headers.map(h=>`<div class="fieldtile"><small>${esc(h.replace(/\n/g,' '))}</small><strong>${esc(fmt(r[h],h))}</strong></div>`).join('')}
+function resetFilters(){$('departmentSelect').value='__all';$('searchBox').value='';$('employeeSelect').value='__all';renderTeam()}
+function manualFields(){const nk=nameKey();let keys=[nk,...headers.filter(h=>h!==nk&&(/attandance|attendance|accuracy|production|avg|totalerrors|o\/s|unplanned|sum.*cases|department|team/i.test(norm(h))))].slice(0,10);if(!keys.includes(nk))keys.unshift(nk);$('manualForm').innerHTML=keys.map((k,i)=>`<input data-key="${esc(k)}" placeholder="${esc(k.replace(/\n/g,' '))}" ${i===0?'required':''} aria-label="${esc(k)}">`).join('')}
+function clearManual(){document.querySelectorAll('#manualForm input').forEach(i=>i.value='')}
+function addManual(){let inputs=[...document.querySelectorAll('#manualForm input')],r={};inputs.forEach(i=>{let v=i.value.trim();if(v!=='')r[i.dataset.key]=v});if(!r[nameKey()]){toast('Please enter an employee name.');return}if(records.some(x=>String(x[nameKey()]).trim().toLowerCase()===String(r[nameKey()]).trim().toLowerCase())){toast('That employee name already exists. You can update the row in the data table by re-uploading Excel.');return}headers.forEach(h=>{if(r[h]===undefined)r[h]=''});records.push(r);fillSelectors();$('employeeSelect').value=String(r[nameKey()]);clearManual();renderPerson(String(r[nameKey()]));$('fileStatus').textContent=`Manual record added · ${records.length} employee records`;toast('Employee added to the dashboard. Export CSV to save your changes.')}
+function loadSample(){records=INITIAL_DATA.map(r=>({...r}));headers=[...INITIAL_HEADERS];fillSelectors();$('searchBox').value='';$('departmentSelect').value='__all';$('employeeSelect').value='__all';$('fileStatus').textContent=`Example data loaded · ${records.length} employee records`;manualFields();renderTeam();toast('Example data restored.')}
+function downloadCSV(){const rows=currentMode==='person'?records.filter(r=>String(r[nameKey()])===$('employeeSelect').value):getTeamRows();const csv=[headers,...rows.map(r=>headers.map(h=>r[h]??''))].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='employees-data-tracker.csv';a.click();URL.revokeObjectURL(a.href)}
+$('excelFile').addEventListener('change',async e=>{let file=e.target.files[0];if(!file)return;try{let wb;if(file.name.toLowerCase().endsWith('.csv')){let text=await file.text();wb=XLSX.read(text,{type:'string'})}else wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});let rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});if(!rows.length)throw Error('No data rows found in the first worksheet.');headers=Object.keys(rows[0]);records=rows.map(r=>({...r}));fillSelectors();manualFields();$('employeeSelect').value='__all';$('departmentSelect').value='__all';$('searchBox').value='';$('fileStatus').textContent=`${file.name} loaded · ${records.length} rows · ${headers.length} columns`;renderTeam();toast('Workbook imported and dashboards updated.')}catch(err){alert('Could not read file: '+err.message)}e.target.value=''});
+function recomputeRatings(){/* Existing ratings in the sample are preserved; imported files without rating fields are scored below. */
+ let hasRating=headers.some(h=>/finalrating|rating/i.test(norm(h))),hasScore=headers.some(h=>/compositescore|score.*100/i.test(norm(h)));
+ if(hasRating&&hasScore)return;
+ let name=nameKey();
+ let metricSpecs=[
+  {patterns:['attandance','attendance'],weight:.15,dir:'high'},
+  {patterns:['sampleaccuracy','accuracy'],weight:.20,dir:'high'},
+  {patterns:['production'],weight:.20,dir:'high'},
+  {patterns:['avg'],weight:.25,dir:'high'},
+  {patterns:['totalerrors','errors'],weight:.10,dir:'low'},
+  {patterns:['o/s cases','oscases','outstandingcases'],weight:.05,dir:'low'},
+  {patterns:['unplanned'],weight:.05,dir:'low'},
+  {patterns:['sumofcases','sumofcases'],weight:.10,dir:'high'}
+ ];
+ let found=metricSpecs.map(s=>({...s,key:headers.find(h=>s.patterns.some(p=>norm(h).includes(norm(p))))})).filter(s=>s.key);
+ if(!found.length)return;
+ let contributions=records.map(()=>0),totalW=found.reduce((s,m)=>s+m.weight,0);
+ found.forEach(m=>{let vals=records.map(r=>num(r[m.key]));let sorted=vals.map((v,i)=>({v,i})).filter(o=>Number.isFinite(o.v)).sort((a,b)=>a.v-b.v);records.forEach((r,i)=>{let v=vals[i];if(!Number.isFinite(v)){contributions[i]+=.5*m.weight;return}let less=sorted.filter(o=>o.v<v).length,equal=sorted.filter(o=>o.v===v).length;let p=(less+(equal+1)/2)/Math.max(1,sorted.length);if(m.dir==='low')p=1-p+1/Math.max(1,sorted.length);contributions[i]+=Math.max(0,Math.min(1,p))*m.weight})});
+ let scoreHdr=headers.find(h=>/compositescore|score.*100/i.test(norm(h)))||'Composite Score (0-100)',rankHdr=headers.find(h=>/performancerank|rank/i.test(norm(h)))||'Performance Rank',rateHdr=headers.find(h=>/finalrating|rating/i.test(norm(h)))||'Final Rating (1=Good, 5=Bad)';
+ if(!headers.includes(scoreHdr))headers.push(scoreHdr);if(!headers.includes(rankHdr))headers.push(rankHdr);if(!headers.includes(rateHdr))headers.push(rateHdr);
+ records.forEach((r,i)=>r[scoreHdr]=+(contributions[i]/totalW*100).toFixed(2));
+ let order=records.map((r,i)=>({i,s:num(r[scoreHdr])})).sort((a,b)=>b.s-a.s);order.forEach((o,pos)=>records[o.i][rankHdr]=pos+1);
+ order.forEach((o,pos)=>{let p=(pos+.5)/order.length;records[o.i][rateHdr]=p<.2?1:p<.4?2:p<.6?3:p<.8?4:5});
+}
+function init(){recomputeRatings();fillSelectors();manualFields();renderTeam()}
+init();
+</script>
+</body></html>
