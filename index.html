@@ -28,7 +28,7 @@ main{min-width:0}.topbar{height:75px;background:#fff;border-bottom:1px solid var
     <button class="navbtn active" id="navTeam" onclick="showTeam()"><span class="navico">▦</span> Team dashboard</button>
     <button class="navbtn" id="navPerson" onclick="showSelected()"><span class="navico">♙</span> Employee dashboard</button>
   </div>
-  <div class="sidebar-bottom"><strong>Admin workspace</strong>Import an Excel file or add records manually. Charts and ratings update from the current data.</div>
+  <div class="sidebar-bottom"><strong>Admin workspace</strong>Import Excel, then click Start Rating to calculate employee scores and rankings.</div>
 </aside>
 <main>
   <header class="topbar"><div><div class="topbar-title">Workforce analytics</div><div class="topbar-sub">Team overview · Individual employee insights</div></div><div class="admin-chip"><div class="admin-avatar">A</div><span>Administrator</span></div></header>
@@ -38,9 +38,9 @@ main{min-width:0}.topbar{height:75px;background:#fff;border-bottom:1px solid var
     <div class="importbox">
       <section class="importcard">
         <div class="import-title"><span>📂</span> Import Excel or CSV</div>
-        <div class="import-desc">Choose an .xlsx, .xls or .csv file. The first worksheet is read and the charts refresh automatically.</div>
-        <div class="uploadrow"><label class="filelabel">＋ Choose file<input type="file" id="excelFile" accept=".xlsx,.xls,.csv"></label><button class="btn" onclick="loadSample()">Restore example data</button></div>
-        <div class="statusline" id="fileStatus">Example data loaded · 21 employee records</div>
+        <div class="import-desc">Choose an .xlsx, .xls or .csv file. Upload your workbook, then click Start Rating to calculate employee rankings and final ratings.</div>
+        <div class="uploadrow"><label class="filelabel">＋ Choose file<input type="file" id="excelFile" accept=".xlsx,.xls,.csv"></label><button class="btn primary" id="startRatingBtn" onclick="startRating()" disabled>★ Start Rating</button></div>
+        <div class="statusline" id="fileStatus">Upload an Excel file to begin rating</div>
         <div class="tiny" style="margin-top:6px">For best results, keep one employee per row and a header row with column names.</div>
       </section>
       <section class="importcard">
@@ -81,7 +81,7 @@ main{min-width:0}.topbar{height:75px;background:#fff;border-bottom:1px solid var
       </div>
       <div class="panel" style="margin-top:14px"><div class="panel-head"><div><div class="panel-title">Complete employee data</div><div class="panel-sub">Every column from the uploaded workbook for this employee</div></div></div><div class="allfields" id="personFields"></div></div>
     </section>
-    <div class="footer">Employees Data Tracker · Free public demo · Upload your workbook to begin.</div>
+    <div class="footer">Employees Data Tracker · Free public demo · Upload Excel and click Start Rating.</div>
   </div>
 </main>
 </div>
@@ -89,7 +89,7 @@ main{min-width:0}.topbar{height:75px;background:#fff;border-bottom:1px solid var
 <script>
 const INITIAL_DATA = [];
 const INITIAL_HEADERS = ["Row Labels", "Attandance", "Unplanned", "Calls", "RONA", "Sum of \n# of Cases ", "CCM", "O/s Cases", "GCN QC", "COE Log", "Total Errors", "Escalations", "Sample Accuracy % \non Production", "CCM %", "Production #", "Avg %", "Additional Comments", "Final Score", "Unnamed: 18", "Unnamed: 19", "Unnamed: 20", "Score card", "FT", "Composite Score (0-100)", "Performance Rank", "Final Rating (1=Good, 5=Bad)"];
-let records=INITIAL_DATA.map(r=>({...r})), headers=[...INITIAL_HEADERS], charts={}, currentMode='team', employeeNameKey='', ratingKey='Final Rating (1=Good, 5=Bad)', scoreKey='Composite Score (0-100)', rankKey='Performance Rank';
+let ratingStarted=false; let records=INITIAL_DATA.map(r=>({...r})), headers=[...INITIAL_HEADERS], charts={}, currentMode='team', employeeNameKey='', ratingKey='Final Rating (1=Good, 5=Bad)', scoreKey='Composite Score (0-100)', rankKey='Performance Rank';
 const palette=['#315f91','#5c8fbd','#87afd1','#b2cbe2','#2b8b72','#d9a441','#8d7bc1','#d57a75','#6b7c93'];
 const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -122,7 +122,7 @@ chart('ratingBars','bar',['1','2','3','4','5'],[1,2,3,4,5].map(x=>ratingCounts[x
 let sorted=rows.slice().sort((a,b)=>(scoreOf(b)||0)-(scoreOf(a)||0)).slice(0,15);chart('scoreBars','bar',sorted.map(r=>String(r[nk]??'').slice(0,20)),sorted.map(r=>scoreOf(r)),{options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#edf1f5'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
 let metricKeys=nums.filter(k=>!/(rating|rank|score|id|cases|production|error|unplanned)/i.test(k)).slice(0,6);if(!metricKeys.length)metricKeys=nums.slice(0,6);chart('metricBars','bar',metricKeys.map(k=>k.replace(/\n/g,' ').slice(0,18)),metricKeys.map(k=>average(rows,k)),{options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'#edf1f5'}}}}});
 renderTeamTable(rows);$('tableSummary').textContent=`Showing ${rows.length} record(s) after filters`}
-function renderTeamTable(rows){let cols=[nameKey(),...headers.filter(h=>h!==nameKey()&&(/finalrating|compositescore|performancerank|department|team|avg|accuracy|production|attendance|attandance|sum.*cases|totalerrors/i.test(norm(h))))];cols=[...new Set(cols)].filter(h=>headers.includes(h));if(!cols.length)cols=headers.slice(0,7);$('teamHead').innerHTML='<tr>'+cols.map(h=>`<th>${esc(h.replace(/\n/g,' '))}</th>`).join('')+'</tr>';let rk=headers.find(h=>/finalrating|rating/i.test(norm(h)));$('teamBody').innerHTML=rows.length?rows.map(r=>'<tr>'+cols.map(h=>{let v=r[h]??'—';if(h===nameKey())return `<td><div class="personcell"><div class="person-avatar">${esc(String(v).trim().slice(0,1).toUpperCase())}</div><strong>${esc(v)}</strong></div></td>`;if(h===rk&&Number.isFinite(num(v)))return `<td><span class="rating ${ratingClass(num(v))}">${esc(v)}</span></td>`;return `<td>${esc(fmt(v,h))}</td>`}).join('')+'</tr>').join(''):'<tr><td colspan="'+cols.length+'" class="empty">No employees match these filters.</td></tr>'}
+function renderTeamTable(rows){let preferred=[headers.find(h=>/compositescore|score.*100/i.test(norm(h))),headers.find(h=>/performancerank/i.test(norm(h))),headers.find(h=>/finalrating/i.test(norm(h)))].filter(Boolean);let cols=[nameKey(),...preferred,...headers.filter(h=>h!==nameKey()&&!preferred.includes(h)&&(/department|team|avg|accuracy|production|attendance|attandance|sum.*cases|totalerrors/i.test(norm(h))))];cols=[...new Set(cols)].filter(h=>headers.includes(h));if(!cols.length)cols=headers.slice(0,7);$('teamHead').innerHTML='<tr>'+cols.map(h=>`<th>${esc(h.replace(/\n/g,' '))}</th>`).join('')+'</tr>';let rk=headers.find(h=>/finalrating|rating/i.test(norm(h)));$('teamBody').innerHTML=rows.length?rows.map(r=>'<tr>'+cols.map(h=>{let v=r[h]??'—';if(h===nameKey())return `<td><div class="personcell"><div class="person-avatar">${esc(String(v).trim().slice(0,1).toUpperCase())}</div><strong>${esc(v)}</strong></div></td>`;if(h===rk&&Number.isFinite(num(v)))return `<td><span class="rating ${ratingClass(num(v))}">${esc(v)}</span></td>`;return `<td>${esc(fmt(v,h))}</td>`}).join('')+'</tr>').join(''):'<tr><td colspan="'+cols.length+'" class="empty">No employees match these filters.</td></tr>'}
 function showTeam(){ $('employeeSelect').value='__all';renderTeam() }
 function showSelected(){let name=$('employeeSelect').value;if(name==='__all'){let first=uniqueVals(records,nameKey())[0];if(!first){toast('No employee records yet.');return}$('employeeSelect').value=first;name=first}renderPerson(name)}
 function onEmployeeSelect(){let v=$('employeeSelect').value;if(v==='__all')showTeam();else renderPerson(v)}
@@ -135,34 +135,63 @@ function resetFilters(){$('departmentSelect').value='__all';$('searchBox').value
 function manualFields(){const nk=nameKey();let keys=[nk,...headers.filter(h=>h!==nk&&(/attandance|attendance|accuracy|production|avg|totalerrors|o\/s|unplanned|sum.*cases|department|team/i.test(norm(h))))].slice(0,10);if(!keys.includes(nk))keys.unshift(nk);$('manualForm').innerHTML=keys.map((k,i)=>`<input data-key="${esc(k)}" placeholder="${esc(k.replace(/\n/g,' '))}" ${i===0?'required':''} aria-label="${esc(k)}">`).join('')}
 function clearManual(){document.querySelectorAll('#manualForm input').forEach(i=>i.value='')}
 function addManual(){let inputs=[...document.querySelectorAll('#manualForm input')],r={};inputs.forEach(i=>{let v=i.value.trim();if(v!=='')r[i.dataset.key]=v});if(!r[nameKey()]){toast('Please enter an employee name.');return}if(records.some(x=>String(x[nameKey()]).trim().toLowerCase()===String(r[nameKey()]).trim().toLowerCase())){toast('That employee name already exists. You can update the row in the data table by re-uploading Excel.');return}headers.forEach(h=>{if(r[h]===undefined)r[h]=''});records.push(r);fillSelectors();$('employeeSelect').value=String(r[nameKey()]);clearManual();renderPerson(String(r[nameKey()]));$('fileStatus').textContent=`Manual record added · ${records.length} employee records`;toast('Employee added to the dashboard. Export CSV to save your changes.')}
-function loadSample(){records=INITIAL_DATA.map(r=>({...r}));headers=[...INITIAL_HEADERS];fillSelectors();$('searchBox').value='';$('departmentSelect').value='__all';$('employeeSelect').value='__all';$('fileStatus').textContent=`Example data loaded · ${records.length} employee records`;manualFields();renderTeam();toast('Example data restored.')}
+function loadSample(){ratingStarted=false;$('startRatingBtn').disabled=true;records=INITIAL_DATA.map(r=>({...r}));headers=[...INITIAL_HEADERS];fillSelectors();$('searchBox').value='';$('departmentSelect').value='__all';$('employeeSelect').value='__all';$('fileStatus').textContent=`Upload an Excel file to begin rating`;manualFields();renderTeam();toast('Ready for Excel upload.')}
 function downloadCSV(){const rows=currentMode==='person'?records.filter(r=>String(r[nameKey()])===$('employeeSelect').value):getTeamRows();const csv=[headers,...rows.map(r=>headers.map(h=>r[h]??''))].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='employees-data-tracker.csv';a.click();URL.revokeObjectURL(a.href)}
-$('excelFile').addEventListener('change',async e=>{let file=e.target.files[0];if(!file)return;try{let wb;if(file.name.toLowerCase().endsWith('.csv')){let text=await file.text();wb=XLSX.read(text,{type:'string'})}else wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});let rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});if(!rows.length)throw Error('No data rows found in the first worksheet.');headers=Object.keys(rows[0]);records=rows.map(r=>({...r}));fillSelectors();manualFields();$('employeeSelect').value='__all';$('departmentSelect').value='__all';$('searchBox').value='';$('fileStatus').textContent=`${file.name} loaded · ${records.length} rows · ${headers.length} columns`;renderTeam();toast('Workbook imported and dashboards updated.')}catch(err){alert('Could not read file: '+err.message)}e.target.value=''});
-function recomputeRatings(){/* Existing ratings in the sample are preserved; imported files without rating fields are scored below. */
- let hasRating=headers.some(h=>/finalrating|rating/i.test(norm(h))),hasScore=headers.some(h=>/compositescore|score.*100/i.test(norm(h)));
- if(hasRating&&hasScore)return;
- let name=nameKey();
- let metricSpecs=[
-  {patterns:['attandance','attendance'],weight:.15,dir:'high'},
-  {patterns:['sampleaccuracy','accuracy'],weight:.20,dir:'high'},
-  {patterns:['production'],weight:.20,dir:'high'},
-  {patterns:['avg'],weight:.25,dir:'high'},
-  {patterns:['totalerrors','errors'],weight:.10,dir:'low'},
-  {patterns:['o/s cases','oscases','outstandingcases'],weight:.05,dir:'low'},
-  {patterns:['unplanned'],weight:.05,dir:'low'},
-  {patterns:['sumofcases','sumofcases'],weight:.10,dir:'high'}
- ];
- let found=metricSpecs.map(s=>({...s,key:headers.find(h=>s.patterns.some(p=>norm(h).includes(norm(p))))})).filter(s=>s.key);
- if(!found.length)return;
- let contributions=records.map(()=>0),totalW=found.reduce((s,m)=>s+m.weight,0);
- found.forEach(m=>{let vals=records.map(r=>num(r[m.key]));let sorted=vals.map((v,i)=>({v,i})).filter(o=>Number.isFinite(o.v)).sort((a,b)=>a.v-b.v);records.forEach((r,i)=>{let v=vals[i];if(!Number.isFinite(v)){contributions[i]+=.5*m.weight;return}let less=sorted.filter(o=>o.v<v).length,equal=sorted.filter(o=>o.v===v).length;let p=(less+(equal+1)/2)/Math.max(1,sorted.length);if(m.dir==='low')p=1-p+1/Math.max(1,sorted.length);contributions[i]+=Math.max(0,Math.min(1,p))*m.weight})});
- let scoreHdr=headers.find(h=>/compositescore|score.*100/i.test(norm(h)))||'Composite Score (0-100)',rankHdr=headers.find(h=>/performancerank|rank/i.test(norm(h)))||'Performance Rank',rateHdr=headers.find(h=>/finalrating|rating/i.test(norm(h)))||'Final Rating (1=Good, 5=Bad)';
- if(!headers.includes(scoreHdr))headers.push(scoreHdr);if(!headers.includes(rankHdr))headers.push(rankHdr);if(!headers.includes(rateHdr))headers.push(rateHdr);
- records.forEach((r,i)=>r[scoreHdr]=+(contributions[i]/totalW*100).toFixed(2));
- let order=records.map((r,i)=>({i,s:num(r[scoreHdr])})).sort((a,b)=>b.s-a.s);order.forEach((o,pos)=>records[o.i][rankHdr]=pos+1);
- order.forEach((o,pos)=>{let p=(pos+.5)/order.length;records[o.i][rateHdr]=p<.2?1:p<.4?2:p<.6?3:p<.8?4:5});
+$('excelFile').addEventListener('change',async e=>{let file=e.target.files[0];if(!file)return;try{let wb;if(file.name.toLowerCase().endsWith('.csv')){let text=await file.text();wb=XLSX.read(text,{type:'string'})}else wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});let rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});if(!rows.length)throw Error('No data rows found in the first worksheet.');headers=Object.keys(rows[0]);records=rows.map(r=>({...r}));ratingStarted=false;const scoreCols=headers.filter(h=>/compositescore|performancerank|finalrating/i.test(norm(h)));records.forEach(r=>scoreCols.forEach(h=>r[h]=''));$('startRatingBtn').disabled=false;fillSelectors();manualFields();$('employeeSelect').value='__all';$('departmentSelect').value='__all';$('searchBox').value='';$('fileStatus').textContent=`${file.name} loaded · ${records.length} rows · Ready — click Start Rating`;renderTeam();toast('Excel uploaded. Click Start Rating to calculate final ratings.')}catch(err){alert('Could not read file: '+err.message)}e.target.value=''});
+function startRating(){
+ if(!records.length){toast('Upload an Excel file first.');return}
+ recomputeRatings();ratingStarted=true;
+ fillSelectors();manualFields();renderTeam();
+ const valid=records.filter(r=>Number.isFinite(ratingOf(r))).length;
+ $('fileStatus').textContent=valid?`Rating complete · ${valid} employees rated · 1 is best, 5 is weakest`:'No ratings calculated. Check your workbook metric columns.';
+ toast(valid?`Success! Final ratings calculated for ${valid} employees.`:'Could not calculate ratings. Check workbook headers.');
 }
-function init(){recomputeRatings();fillSelectors();manualFields();renderTeam()}
+function recomputeRatings(){
+ // Always calculate scores and ratings for the currently loaded workbook.
+ // Do not trust blank/pre-existing score or rating columns from Excel.
+ const key=(test)=>headers.find(h=>test(norm(h)));
+ const metricSpecs=[
+  {key:key(h=>h==='attandance'||h==='attendance'),weight:.15,dir:'high'},
+  {key:key(h=>h.includes('sampleaccuracy')),weight:.20,dir:'high'},
+  {key:key(h=>h.startsWith('production')&&!h.includes('accuracy')),weight:.20,dir:'high'},
+  {key:key(h=>h==='avg'||h.startsWith('avg')),weight:.25,dir:'high'},
+  {key:key(h=>h.includes('totalerrors')||h==='errors'),weight:.10,dir:'low'},
+  {key:key(h=>h.includes('oscases')||h.includes('outstandingcases')),weight:.05,dir:'low'},
+  {key:key(h=>h==='unplanned'),weight:.05,dir:'low'},
+  {key:key(h=>(h.includes('sum')&&h.includes('cases'))||(h.includes('number')&&h.includes('cases'))),weight:.10,dir:'high'}
+ ].filter(m=>m.key);
+ const scoreHdr=headers.find(h=>/compositescore|score.*100/i.test(norm(h)))||'Composite Score (0-100)';
+ const rankHdr=headers.find(h=>/performancerank/i.test(norm(h)))||'Performance Rank';
+ const rateHdr=headers.find(h=>/finalrating/i.test(norm(h)))||'Final Rating (1=Good, 5=Bad)';
+ [scoreHdr,rankHdr,rateHdr].forEach(h=>{if(!headers.includes(h))headers.push(h)});
+ if(!records.length||!metricSpecs.length){records.forEach(r=>{r[scoreHdr]='';r[rankHdr]='';r[rateHdr]=''});return}
+ const contributions=records.map(()=>0),weightTotals=records.map(()=>0);
+ metricSpecs.forEach(m=>{
+   const vals=records.map(r=>num(r[m.key]));
+   const valid=vals.filter(Number.isFinite).sort((a,b)=>a-b);
+   if(!valid.length)return;
+   records.forEach((r,i)=>{
+     const v=vals[i]; if(!Number.isFinite(v))return;
+     let less=0,equal=0; for(const x of valid){if(x<v)less++;else if(x===v)equal++;else break;}
+     let pct=(less+equal/2)/valid.length;
+     if(m.dir==='low')pct=1-pct;
+     contributions[i]+=pct*m.weight;weightTotals[i]+=m.weight;
+   });
+ });
+ records.forEach((r,i)=>{r[scoreHdr]=weightTotals[i]?+(contributions[i]/weightTotals[i]*100).toFixed(2):''});
+ const order=records.map((r,i)=>({i,s:num(r[scoreHdr])})).sort((a,b)=>{
+   const as=Number.isFinite(a.s)?a.s:-Infinity,bs=Number.isFinite(b.s)?b.s:-Infinity;
+   return bs-as||a.i-b.i;
+ });
+ order.forEach((o,pos)=>{
+   const score=num(records[o.i][scoreHdr]);
+   records[o.i][rankHdr]=Number.isFinite(score)?pos+1:'';
+   const fraction=(pos+.5)/order.length;
+   records[o.i][rateHdr]=Number.isFinite(score)?(fraction<.2?1:fraction<.4?2:fraction<.6?3:fraction<.8?4:5):'';
+ });
+}
+
+function init(){fillSelectors();manualFields();renderTeam()}
 init();
 </script>
 </body></html>
